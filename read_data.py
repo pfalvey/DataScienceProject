@@ -30,6 +30,18 @@ def map_data(data):
     data["Day of week"] = Days
     return data
 
+def drop_time(data):
+    date = []
+    to_drop = []
+    for index, row in data.iterrows():
+        if row["Start date"].split()[0]== row["End date"].split()[0]:
+            date.append(row["Start date"].split()[0])
+        else:
+            to_drop.append(index)
+    data.drop(["Start date", "End date"], axis=1, inplace=True)
+    data.drop(data.index[to_drop], inplace=True)
+    data["Date"] = date
+    return data
 
 if __name__ == "__main__":
     main()
