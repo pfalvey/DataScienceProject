@@ -32,8 +32,12 @@ def main():
     resultsOLR= DataFrame(resultsOLR)
     print(data.head(10))
     print(testdata.head(10))
+    print("Bayesian Ridge Regression")
     print(resultsBRR.head(10))
+    print("RMSE=", do_analysis(resultsBRR, testdata))
+    print("Ordinary Linear Regression")
     print(resultsOLR.head(10))
+    print("RMSE=", do_analysis(resultsOLR, testdata))
     return data
 
 def read_data(name_file):
@@ -91,6 +95,9 @@ def date_as_obj(data):
             newData=newData.append(vals)
             newData=newData.reset_index(drop=True)
     return newData
+def do_analysis(predict, actual):
+    rmse= ((predict[0]-actual["Counts"])**2).mean() ** 0.5
+    return rmse
 
 if __name__ == "__main__":
     main()
