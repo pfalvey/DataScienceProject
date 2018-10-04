@@ -4,11 +4,13 @@ import pandas
 from pandas import Series, DataFrame
 from datetime import date
 import sklearn.linear_model as skLm
+import matplotlib.pyplot as plt
 
 def main():
-    filename = "2016-capitalbikeshare-tripdata/2016Q1-capitalbikeshare-tripdata.csv"
-    testfile= "2017-capitalbikeshare-tripdata/2017Q1-capitalbikeshare-tripdata.csv"
+    filename = "small/2016-capitalbikeshare-tripdata/2016Q1-capitalbikeshare-tripdata.csv"
+    testfile= "small/2017-capitalbikeshare-tripdata/2017Q1-capitalbikeshare-tripdata.csv"
     data = read_data(filename)
+    print(data)
     data = map_data(data)
     data= drop_time(data)
     data=date_as_obj(data)
@@ -19,7 +21,7 @@ def main():
     testdata = map_data(testdata)
     testdata= drop_time(testdata)
     testdata=date_as_obj(testdata)
-    testfit=data.drop(["Counts", "Date"], axis=1)
+    testfit=testdata.drop(["Counts", "Date"], axis=1)
     #Bayesian Ridge Regression from skLearn
     brr=skLm.BayesianRidge()
     brr.fit(fitData, data["Counts"])
@@ -38,6 +40,7 @@ def main():
     print("Ordinary Linear Regression")
     print(resultsOLR.head(10))
     print("RMSE=", do_analysis(resultsOLR, testdata))
+    make_graph(testdata, resultsBRR, resultsOLR)
     return data
 
 def read_data(name_file):
@@ -95,9 +98,23 @@ def date_as_obj(data):
             newData=newData.append(vals)
             newData=newData.reset_index(drop=True)
     return newData
+
 def do_analysis(predict, actual):
     rmse= ((predict[0]-actual["Counts"])**2).mean() ** 0.5
     return rmse
+
+def make_graph(actual, predictBRR, predictOLR):
+    predictBRR.columns=['BRR']
+    predictOLR.columns=['OLR']
+    whole = pandas.concat([actual, predictBRR, predictOLR], axis=1)
+    whole= whole.loc[whole['Start station number'] == 31634]
+    print(whole.head(10))
+    usegraph= whole.loc[:,['Date','Counts','BRR','OLR']]
+    plt.scatter(usegraph['Date'], usegraph['Counts'], c='b', label="actual")
+    plt.scatter(usegraph['Date'], usegraph['BRR'], c='g', label="Bayesian Ridge Regression")
+    plt.scatter(usegraph['Date'], usegraph['OLR'], c='r', label="Ordinary Linear Regression")
+    plt.legend()
+    plt.show()
 
 if __name__ == "__main__":
     main()
