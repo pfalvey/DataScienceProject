@@ -29,9 +29,9 @@ def main():
     data=data.reset_index(drop=True)
     
     #REMOVE LATER: TAKES RANDOM SAMPLE OF THE DATA
-    data=data.sample(frac=0.25)
-    data=data.sort_index()
-    data=data.reset_index(drop=True)
+    #data=data.sample(frac=0.25)
+    #data=data.sort_index()
+    #data=data.reset_index(drop=True)
     
     print("Raw Data in DataFrame")
     data = map_data(data)
@@ -55,20 +55,20 @@ def main():
     fitData=DataFrame(fitData)
  
     print("Starting Grid Search SVR")
-    model=sk.SVR(kernel='poly', epsilon=1, gamma=1E-5, C=1E10, max_iter=1000)
-    paramToTest= {'degree':[2,3,5]}
+    model=sk.SVR(kernel='poly', degree=2, epsilon=1, gamma=1E-5, C=1E10, max_iter=1000)
+    #paramToTest= {'degree':[2,3,5]}
     #best first time: gam=1E-5, C=1E8, poly, degree=2
-    search= GridSearchCV(model, paramToTest)
+    #search= GridSearchCV(model, paramToTest)
     #so far rbf got closest but still just a straight line over the parabola
     #For parameters: try GridSearchCV
     
-    print("starting search fit")
+    print("starting fit")
     #print("fit data \n", fitData)
     #print(fitData.head(5),data["Counts"].head(5))
-    search.fit(fitData, data["Counts"])
+    model.fit(fitData, data["Counts"])
     
     pandas.set_option('display.max_columns', 500)
-    print(DataFrame(search.cv_results_))
+    #print(DataFrame(search.cv_results_))
     
     print("formatting test data")
     testdata = read_data(testfile)
@@ -78,9 +78,9 @@ def main():
     testdata=testdata.reset_index(drop=True)
     
     #REMOVE LATER: TAKES RANDOM SAMPLE OF THE DATA
-    testdata=testdata.sample(frac=0.25)
-    testdata=testdata.sort_index()
-    testdata=testdata.reset_index(drop=True)
+    #testdata=testdata.sample(frac=0.25)
+    #testdata=testdata.sort_index()
+    #testdata=testdata.reset_index(drop=True)
     
     testdata = map_data(testdata)
     testdata= drop_time(testdata)
@@ -91,7 +91,7 @@ def main():
     testfit=DataFrame(testfit)
     
     print("starting predict")
-    results=search.predict(testfit)
+    results=model.predict(testfit)
     results=DataFrame(results)
     print("Support Vector Regression")
     print(results.head(10))
