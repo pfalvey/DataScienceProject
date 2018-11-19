@@ -57,7 +57,7 @@ def main():
     print("Starting Grid Search SVR")
     model=sk.SVR(kernel='poly', epsilon=1, gamma=1E-5, C=1E10, max_iter=1000)
     paramToTest= {'degree':[2,3,5]}
-    #best first time: gam=1E-5, C=1E8
+    #best first time: gam=1E-5, C=1E8, poly, degree=2
     search= GridSearchCV(model, paramToTest)
     #so far rbf got closest but still just a straight line over the parabola
     #For parameters: try GridSearchCV
