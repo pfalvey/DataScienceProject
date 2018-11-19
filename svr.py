@@ -27,12 +27,12 @@ def main():
     data=data.append(read_data(file3))
     data=data.append(read_data(file4))
     data=data.reset_index(drop=True)
-    
+
     #REMOVE LATER: TAKES RANDOM SAMPLE OF THE DATA
-    #data=data.sample(frac=0.25)
-    #data=data.sort_index()
-    #data=data.reset_index(drop=True)
-    
+    data=data.sample(frac=0.10)
+    data=data.sort_index()
+    data=data.reset_index(drop=True)
+
     print("Raw Data in DataFrame")
     data = map_data(data)
     data= drop_time(data)
@@ -43,17 +43,17 @@ def main():
     fitData=data.drop(["Counts", "Date"], axis=1)
     print("fit data ready")
     #Select data to test with the regressions
-    
+
     #Support Vector Regression from skLearn
     print(fitData.head(10))
-    
+
     #preprocessing from sklearn (suggested by SVR)
     print("preprocessing")
 
     scaler=pre.StandardScaler()
     fitData=scaler.fit_transform(fitData)
     fitData=DataFrame(fitData)
- 
+
     print("Starting Grid Search SVR")
     model=sk.SVR(kernel='poly', degree=2, epsilon=1, gamma=1E-5, C=1E10, max_iter=1000)
     #paramToTest= {'degree':[2,3,5]}
@@ -61,27 +61,27 @@ def main():
     #search= GridSearchCV(model, paramToTest)
     #so far rbf got closest but still just a straight line over the parabola
     #For parameters: try GridSearchCV
-    
+
     print("starting fit")
     #print("fit data \n", fitData)
     #print(fitData.head(5),data["Counts"].head(5))
     model.fit(fitData, data["Counts"])
-    
+
     pandas.set_option('display.max_columns', 500)
     #print(DataFrame(search.cv_results_))
-    
+
     print("formatting test data")
     testdata = read_data(testfile)
     testdata=testdata.append(read_data(test2))
     testdata=testdata.append(read_data(test3))
     testdata=testdata.append(read_data(test4))
     testdata=testdata.reset_index(drop=True)
-    
+
     #REMOVE LATER: TAKES RANDOM SAMPLE OF THE DATA
-    #testdata=testdata.sample(frac=0.25)
-    #testdata=testdata.sort_index()
-    #testdata=testdata.reset_index(drop=True)
-    
+    testdata=testdata.sample(frac=0.10)
+    testdata=testdata.sort_index()
+    testdata=testdata.reset_index(drop=True)
+
     testdata = map_data(testdata)
     testdata= drop_time(testdata)
     testdata=date_as_obj(testdata)
@@ -89,7 +89,7 @@ def main():
     testfit=testdata.drop(["Counts", "Date"], axis=1)
     testfit=scaler.fit_transform(testfit)
     testfit=DataFrame(testfit)
-    
+
     print("starting predict")
     results=model.predict(testfit)
     results=DataFrame(results)
@@ -176,15 +176,22 @@ def make_graph(actual, predict, fit):
     print(whole.head(10))
     usegraph= whole.loc[:,['Date','Counts','SVR']]
     fitGraph=fit.loc[fit['Start station number']==31634]
-    plt.scatter(usegraph['Date'], usegraph['Counts'], c='b', label="actual")
-    plt.scatter(usegraph['Date'], usegraph['SVR'], c='g', label="Support Vector Regression")
+
+    # Eric's because 2.7 rocks
+    usegraph=usegraph.reset_index(drop=True)
+    plt.scatter(usegraph.index, usegraph['Counts'], c='b', label="actual")
+    plt.scatter(usegraph.index, usegraph['SVR'], c='g', label="Support Vector Regression")
+
+    # Robby's
+    # plt.scatter(usegraph['Date'], usegraph['Counts'], c='b', label="actual")
+    # plt.scatter(usegraph['Date'], usegraph['SVR'], c='g', label="Support Vector Regression")
+
     #if len(usegraph['Date'])>len(fitGraph['Counts']):
      #   plt.scatter(usegraph['Date'][0:len(fitGraph['Counts'])], fitGraph['Counts'], c='r', label="Fit Data")
     #else:
      #   plt.scatter(usegraph['Date'], fitGraph['Counts'][0:len(usegraph['Date'])], c='r', label="Fit Data")
     plt.legend()
     plt.savefig('svr_graph_search.png')
-    
 
 if __name__ == "__main__":
     main()
