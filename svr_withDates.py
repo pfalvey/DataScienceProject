@@ -13,7 +13,7 @@ holidays_2017 = ["2017-01-01","2017-01-02", "2017-01-16", "2017-02-20", "2017-05
 
 
 def main():
-    #Read in the correct files
+    #read in correct files
     filename = "2016-capitalbikeshare-tripdata/2016Q1-capitalbikeshare-tripdata.csv"
     file2= "2016-capitalbikeshare-tripdata/2016Q2-capitalbikeshare-tripdata.csv"
     file3= "2016-capitalbikeshare-tripdata/2016Q3-capitalbikeshare-tripdata.csv"
@@ -22,19 +22,19 @@ def main():
     test2 = "2017-capitalbikeshare-tripdata/2017Q2-capitalbikeshare-tripdata.csv"
     test3 = "2017-capitalbikeshare-tripdata/2017Q3-capitalbikeshare-tripdata.csv"
     test4 = "2017-capitalbikeshare-tripdata/2017Q4-capitalbikeshare-tripdata.csv"
-    print("start")
     
-    #Combine all the 2016 data and reset the index
+    #combine all the 2016 data and reset the index
+    print("start")
     data = read_data(filename)
     data=data.append(read_data(file2))
     data=data.append(read_data(file3))
     data=data.append(read_data(file4))
     data=data.reset_index(drop=True)
     
-    #TAKES RANDOM SAMPLE OF THE DATA for increased speed if included
-    #data=data.sample(frac=0.25)
-    #data=data.sort_index()
-    #data=data.reset_index(drop=True)
+    #REMOVE LATER: TAKES RANDOM SAMPLE OF THE DATA for speed if included
+    data=data.sample(frac=0.1)
+    data=data.sort_index()
+    data=data.reset_index(drop=True)
     
     print("Raw Data in DataFrame")
     #adds day of week (as integer) and holiday (1 or 0) to the data
@@ -43,21 +43,25 @@ def main():
     data= drop_time(data)
     #remakes the dataframe so that the number of rides for each station each
     #day are summed and included as count (with other features stayng the same)
-    data=date_as_obj(data)
-    
+
     #included if want to graph the data it was fit too (NEED TO CHANGE THE PLOTTING FUNCITON)
     fitGraph=data
     #adds the feature month (1-12) to the data
-    #(??month may not be nexessary if including date???- see svr_withDates.py)
+    #Also adds the date as a number (should be 1-365 or something)
+    #(??month may not be nexessary if including date???)
     data=month(data)
     #drop counts and date; date not used and counts will be used as Y in svr
     fitData=data.drop(["Counts", "Date"], axis=1)
     print("fit data ready")
     
+    #Select data to test with the regressions
+    
     #Support Vector Regression from skLearn
     print(fitData.head(10))
     
     #preprocessing from sklearn (suggested by SVR)
+    #NOT SURE IF THIS COULD BE A PROBLEM WITH THE FIT (dont to fit and test
+    #shouldnt skew stuff by maybe)
     print("preprocessing")
     scaler=pre.StandardScaler()
     fitData=scaler.fit_transform(fitData)
@@ -77,13 +81,13 @@ def main():
     #print("fit data \n", fitData)
     #print(fitData.head(5),data["Counts"].head(5))
     
-    #fit the SVR model
+    #fit the svr model
     model.fit(fitData, data["Counts"])
     
     pandas.set_option('display.max_columns', 500)
     #print(DataFrame(search.cv_results_))
     
-    #do all the same stuff for the 2017 data as for 2016 above
+    #do all the same stuff to the 2017 data as the 2016 data as test data
     print("formatting test data")
     testdata = read_data(testfile)
     testdata=testdata.append(read_data(test2))
@@ -91,21 +95,21 @@ def main():
     testdata=testdata.append(read_data(test4))
     testdata=testdata.reset_index(drop=True)
     
-    #TAKES RANDOM SAMPLE OF THE DATA for faster if included
-    #testdata=testdata.sample(frac=0.25)
-    #testdata=testdata.sort_index()
-    #testdata=testdata.reset_index(drop=True)
+    #REMOVE LATER: TAKES RANDOM SAMPLE OF THE DATA
+    testdata=testdata.sample(frac=0.1)
+    testdata=testdata.sort_index()
+    testdata=testdata.reset_index(drop=True)
     
     testdata = map_data(testdata)
     testdata= drop_time(testdata)
     testdata=date_as_obj(testdata)
     testdata=month(testdata)
-    testfit=testdata.drop(["Counts", "Date"], axis=1)
-    #preprocessing again
+    testfit=testdata.drop(["Counts","Date"], axis=1)
+    #preprocessing
     testfit=scaler.fit_transform(testfit)
     testfit=DataFrame(testfit)
     
-    #predict, print predictions, and plot
+    #predict, print prediction, plot
     print("starting predict")
     results=model.predict(testfit)
     results=DataFrame(results)
@@ -173,10 +177,20 @@ def date_as_obj(data):
 
 def month(allData):
     months=[]
+    dateNum=[]
+    days={}
+    counter=0
     for i in allData['Date']:
+        if i in days:
+            dateNum.append(days[i])
+        else:
+            counter+=1
+            days[i]=counter
+            dateNum.append(days[i])
         year,month,day=i.split("-")
         months.append(month)
     allData['Month']=months
+    allData['Date_num']=dateNum
     return allData
 
 def do_analysis(predict, actual):
@@ -194,13 +208,12 @@ def make_graph(actual, predict, fit):
     fitGraph=fit.loc[fit['Start station number']==31634]
     plt.scatter(usegraph['Date'], usegraph['Counts'], c='b', label="actual")
     plt.scatter(usegraph['Date'], usegraph['SVR'], c='g', label="Support Vector Regression")
-    #This stuff was to plot the data it was fitted to but it wasnt the useful
     #if len(usegraph['Date'])>len(fitGraph['Counts']):
      #   plt.scatter(usegraph['Date'][0:len(fitGraph['Counts'])], fitGraph['Counts'], c='r', label="Fit Data")
     #else:
      #   plt.scatter(usegraph['Date'], fitGraph['Counts'][0:len(usegraph['Date'])], c='r', label="Fit Data")
     plt.legend()
-    plt.savefig('svr_graph_final.png')
+    plt.savefig('svr_graph_withDates.png')
     
 
 if __name__ == "__main__":
