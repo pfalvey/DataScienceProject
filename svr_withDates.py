@@ -71,7 +71,7 @@ def main():
     print("Starting Grid Search SVR")
     #based on the tests I found this to be the best set of parameters but see below for
     #notes on the process
-    model=sk.SVR(kernel='poly', degree=2, epsilon=1, gamma=1E-5, C=1E10, max_iter=1000)
+    model=sk.SVR(kernel='poly', degree=2, epsilon=1, gamma=1E-5, C=1E10, max_iter=10000)
     #paramToTest= {'degree':[2,3,5]}
     #best first time: gam=1E-5, C=1E8, poly, degree=2
     #search= GridSearchCV(model, paramToTest)
@@ -192,7 +192,9 @@ def month(allData):
         months.append(month)
     allData['Month']=months
     allData['Date_num']=dateNum
-    return allData
+    newDateData=allData[['Date_num', 'Start station number','Day of week','Holiday','Month','Date','Counts']].copy()
+    newDateData=newDateData.reset_index(drop=True)
+    return newDateData
 
 def do_analysis(predict, actual):
     rmse= ((predict[0]-actual["Counts"])**2).mean() ** 0.5
