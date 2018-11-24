@@ -32,7 +32,7 @@ def main():
     data=data.reset_index(drop=True)
     
     #REMOVE LATER: TAKES RANDOM SAMPLE OF THE DATA for speed if included
-    data=data.sample(frac=0.1)
+    data=data.sample(frac=0.25)
     data=data.sort_index()
     data=data.reset_index(drop=True)
     
@@ -43,6 +43,7 @@ def main():
     data= drop_time(data)
     #remakes the dataframe so that the number of rides for each station each
     #day are summed and included as count (with other features stayng the same)
+    data=date_as_obj(data)
 
     #included if want to graph the data it was fit too (NEED TO CHANGE THE PLOTTING FUNCITON)
     fitGraph=data
@@ -96,7 +97,7 @@ def main():
     testdata=testdata.reset_index(drop=True)
     
     #REMOVE LATER: TAKES RANDOM SAMPLE OF THE DATA
-    testdata=testdata.sample(frac=0.1)
+    testdata=testdata.sample(frac=0.25)
     testdata=testdata.sort_index()
     testdata=testdata.reset_index(drop=True)
     
