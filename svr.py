@@ -13,6 +13,7 @@ holidays_2017 = ["2017-01-01","2017-01-02", "2017-01-16", "2017-02-20", "2017-05
 
 
 def main():
+    #Read in the correct files
     filename = "2016-capitalbikeshare-tripdata/2016Q1-capitalbikeshare-tripdata.csv"
     file2= "2016-capitalbikeshare-tripdata/2016Q2-capitalbikeshare-tripdata.csv"
     file3= "2016-capitalbikeshare-tripdata/2016Q3-capitalbikeshare-tripdata.csv"
@@ -22,38 +23,46 @@ def main():
     test3 = "2017-capitalbikeshare-tripdata/2017Q3-capitalbikeshare-tripdata.csv"
     test4 = "2017-capitalbikeshare-tripdata/2017Q4-capitalbikeshare-tripdata.csv"
     print("start")
+    
+    #Combine all the 2016 data and reset the index
     data = read_data(filename)
     data=data.append(read_data(file2))
     data=data.append(read_data(file3))
     data=data.append(read_data(file4))
     data=data.reset_index(drop=True)
-
-    #REMOVE LATER: TAKES RANDOM SAMPLE OF THE DATA
-    data=data.sample(frac=0.10)
-    data=data.sort_index()
-    data=data.reset_index(drop=True)
-
+    
+    #TAKES RANDOM SAMPLE OF THE DATA for increased speed if included
+    #data=data.sample(frac=0.25)
+    #data=data.sort_index()
+    #data=data.reset_index(drop=True)
+    
     print("Raw Data in DataFrame")
+    #adds day of week (as integer) and holiday (1 or 0) to the data
     data = map_data(data)
+    #changes date format to include only the year-month-day for the start day
     data= drop_time(data)
+    #remakes the dataframe so that the number of rides for each station each
+    #day are summed and included as count (with other features stayng the same)
     data=date_as_obj(data)
-    #print(data)
+    
+    #included if want to graph the data it was fit too (NEED TO CHANGE THE PLOTTING FUNCITON)
     fitGraph=data
+    #adds the feature month (1-12) to the data
+    #(??may not be nexessary if including date???- see svr_withDates.py)
     data=month(data)
+    #drop counts and date; date not used and counts will be used as Y in svr
     fitData=data.drop(["Counts", "Date"], axis=1)
     print("fit data ready")
-    #Select data to test with the regressions
-
+    
     #Support Vector Regression from skLearn
     print(fitData.head(10))
-
+    
     #preprocessing from sklearn (suggested by SVR)
     print("preprocessing")
-
     scaler=pre.StandardScaler()
     fitData=scaler.fit_transform(fitData)
     fitData=DataFrame(fitData)
-
+ 
     print("Starting Grid Search SVR")
     model=sk.SVR(kernel='poly', degree=2, epsilon=1, gamma=1E-5, C=1E10, max_iter=1000)
     #paramToTest= {'degree':[2,3,5]}
@@ -61,35 +70,40 @@ def main():
     #search= GridSearchCV(model, paramToTest)
     #so far rbf got closest but still just a straight line over the parabola
     #For parameters: try GridSearchCV
-
+    
     print("starting fit")
     #print("fit data \n", fitData)
     #print(fitData.head(5),data["Counts"].head(5))
+    
+    #fit the SVR model
     model.fit(fitData, data["Counts"])
-
+    
     pandas.set_option('display.max_columns', 500)
     #print(DataFrame(search.cv_results_))
-
+    
+    #do all the same stuff for the 2017 data as for 2016 above
     print("formatting test data")
     testdata = read_data(testfile)
     testdata=testdata.append(read_data(test2))
     testdata=testdata.append(read_data(test3))
     testdata=testdata.append(read_data(test4))
     testdata=testdata.reset_index(drop=True)
-
-    #REMOVE LATER: TAKES RANDOM SAMPLE OF THE DATA
-    testdata=testdata.sample(frac=0.10)
-    testdata=testdata.sort_index()
-    testdata=testdata.reset_index(drop=True)
-
+    
+    #TAKES RANDOM SAMPLE OF THE DATA for faster if included
+    #testdata=testdata.sample(frac=0.25)
+    #testdata=testdata.sort_index()
+    #testdata=testdata.reset_index(drop=True)
+    
     testdata = map_data(testdata)
     testdata= drop_time(testdata)
     testdata=date_as_obj(testdata)
     testdata=month(testdata)
     testfit=testdata.drop(["Counts", "Date"], axis=1)
+    #preprocessing again
     testfit=scaler.fit_transform(testfit)
     testfit=DataFrame(testfit)
-
+    
+    #predict, print predictions, and plot
     print("starting predict")
     results=model.predict(testfit)
     results=DataFrame(results)
@@ -176,22 +190,16 @@ def make_graph(actual, predict, fit):
     print(whole.head(10))
     usegraph= whole.loc[:,['Date','Counts','SVR']]
     fitGraph=fit.loc[fit['Start station number']==31634]
-
-    # Eric's because 2.7 rocks
-    usegraph=usegraph.reset_index(drop=True)
-    plt.scatter(usegraph.index, usegraph['Counts'], c='b', label="actual")
-    plt.scatter(usegraph.index, usegraph['SVR'], c='g', label="Support Vector Regression")
-
-    # Robby's
-    # plt.scatter(usegraph['Date'], usegraph['Counts'], c='b', label="actual")
-    # plt.scatter(usegraph['Date'], usegraph['SVR'], c='g', label="Support Vector Regression")
-
+    plt.scatter(usegraph['Date'], usegraph['Counts'], c='b', label="actual")
+    plt.scatter(usegraph['Date'], usegraph['SVR'], c='g', label="Support Vector Regression")
+    #This stuff was to plot the data it was fitted to but it wasnt the useful
     #if len(usegraph['Date'])>len(fitGraph['Counts']):
      #   plt.scatter(usegraph['Date'][0:len(fitGraph['Counts'])], fitGraph['Counts'], c='r', label="Fit Data")
     #else:
      #   plt.scatter(usegraph['Date'], fitGraph['Counts'][0:len(usegraph['Date'])], c='r', label="Fit Data")
     plt.legend()
-    plt.savefig('svr_graph_search.png')
+    plt.savefig('svr_graph_final.png')
+    
 
 if __name__ == "__main__":
     main()
