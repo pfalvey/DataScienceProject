@@ -71,7 +71,7 @@ def main():
     print("Starting Grid Search SVR")
     #based on the tests I found this to be the best set of parameters but see below for
     #notes on the process
-    model=sk.SVR(kernel='poly', degree=2, epsilon=1, gamma=1E-5, C=1E10, max_iter=10000)
+    model=sk.SVR(kernel='poly', degree=2, epsilon=0.75, gamma=1E-6, C=1E11, max_iter=50000)
     #paramToTest= {'degree':[2,3,5]}
     #best first time: gam=1E-5, C=1E8, poly, degree=2
     #search= GridSearchCV(model, paramToTest)
