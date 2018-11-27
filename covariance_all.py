@@ -78,7 +78,7 @@ def quarters(name_file):
         dataframe["Quarter"]=3
     elif 'Q4' in name_file:
         dataframe["Quarter"]=4
-    dataframe.drop(["Member type", "Duration", "Bike number", "Start station", "End station number"], axis=1, inplace=True)
+    #dataframe.drop(["Member type", "Duration", "Bike number", "Start station", "End station"], axis=1, inplace=True)
     return dataframe
 
 main()
