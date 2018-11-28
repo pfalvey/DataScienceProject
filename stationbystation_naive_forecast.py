@@ -37,7 +37,7 @@ def naive_forecast(data):
         print(len(actual))
         print(i)
         print(len(pred))
-    predicted = pd.DataFrame()
+    predicted = pandas.DataFrame()
     predicted["Date"] = days
     predicted["Station"] = locations
     predicted["Predicted Count"] = pred
