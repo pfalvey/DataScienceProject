@@ -11,6 +11,7 @@ from scipy import stats
 import pandas as pd
 from datetime import date
 import matplotlib.pyplot as plt
+import sys
 
 def main():
     path_2016 = './2016-capitalbikeshare-tripdata/'
@@ -24,7 +25,9 @@ def main():
         data_2016[bike_2016.index(i)] = quarters(path_2016 + i)
         data_2016[bike_2016.index(i)] = read_data.map_data(data_2016[bike_2016.index(i)])
         ix = ix + 1
-        print("loading ... " + str(ix) + "/4 2016 data")
+        sys.stdout.write("\rloading ... %d/4 2016 data" % ix)
+        sys.stdout.flush()
+        #print("loading ... " + str(ix) + "/4 2016 data")
     # data_2017 = [0] * 4
     # ix = 0
     # for i in bike_2017:
@@ -34,6 +37,26 @@ def main():
     #     print("loading ... " + str(ix) + "/4 2017 data")
 
     full_data_2016 = pd.concat(data_2016)
+
+    # counts_2016_dict = dict()
+    # rides = full_data_2016.shape[0]
+    # iter = 0
+    #
+    # sys.stdout.write("\r\033[K")
+    #
+    # for index, row in full_data_2016.iterrows():
+    #     if row['Start station number'] in counts_2016_dict:
+    #         counts_2016_dict[row['Start station number']] += 1
+    #     else:
+    #         counts_2016_dict[row['Start station number']] = 1
+    #     iter += 1
+    #     if iter % 5000 == 0:
+    #         pct = float(iter)/float(rides)*100
+    #         sys.stdout.write("\rloading ... %d%% rides" % pct)
+    #         sys.stdout.flush()
+    #         #print "loading ... " + str(iter) + "/" + str(stations) + " stations"
+    # #print counts_2016_dict
+
     # full_data_2017 = pd.concat(data_2017)
     full_cov_2016 = full_data_2016.cov()
     # full_cov_2017 = full_data_2017.cov()
