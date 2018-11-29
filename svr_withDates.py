@@ -6,6 +6,7 @@ from datetime import date
 import sklearn.svm as sk
 import sklearn.preprocessing as pre
 from sklearn.model_selection import GridSearchCV
+import matplotlib
 import matplotlib.pyplot as plt
 
 holidays_2016 = ["2016-01-01", "2016-01-18", "2016-02-15", "2016-05-30", "2016-07-04", "2016-09-05", "2016-10-10", "2016-11-11", "2016-11-24", "2016-12-26"]
@@ -31,11 +32,6 @@ def main():
     data=data.append(read_data(file4))
     data=data.reset_index(drop=True)
     
-    #REMOVE LATER: TAKES RANDOM SAMPLE OF THE DATA for speed if included
-    data=data.sample(frac=0.25)
-    data=data.sort_index()
-    data=data.reset_index(drop=True)
-    
     print("Raw Data in DataFrame")
     #adds day of week (as integer) and holiday (1 or 0) to the data
     data = map_data(data)
@@ -48,8 +44,7 @@ def main():
     #included if want to graph the data it was fit too (NEED TO CHANGE THE PLOTTING FUNCITON)
     fitGraph=data
     #adds the feature month (1-12) to the data
-    #Also adds the date as a number (should be 1-365 or something)
-    #(??month may not be nexessary if including date???)
+    #Also adds the date as a number (1-365)
     data=month(data)
     #drop counts and date; date not used and counts will be used as Y in svr
     fitData=data.drop(["Counts", "Date"], axis=1)
@@ -58,35 +53,24 @@ def main():
     #Select data to test with the regressions
     
     #Support Vector Regression from skLearn
-    print(fitData.head(10))
+    print(data.head(10))
     
     #preprocessing from sklearn (suggested by SVR)
-    #NOT SURE IF THIS COULD BE A PROBLEM WITH THE FIT (dont to fit and test
-    #shouldnt skew stuff by maybe)
     print("preprocessing")
     scaler=pre.StandardScaler()
     fitData=scaler.fit_transform(fitData)
     fitData=DataFrame(fitData)
  
     print("Starting Grid Search SVR")
-    #based on the tests I found this to be the best set of parameters but see below for
-    #notes on the process
     model=sk.SVR(kernel='poly', degree=2, epsilon=0.75, gamma=1E-6, C=1E11, max_iter=50000)
-    #paramToTest= {'degree':[2,3,5]}
-    #best first time: gam=1E-5, C=1E8, poly, degree=2
-    #search= GridSearchCV(model, paramToTest)
-    #so far rbf got closest but still just a straight line over the parabola
-    #For parameters: try GridSearchCV
+    #best parameters determined by GridSearchCV(model, paramToTest)
     
     print("starting fit")
-    #print("fit data \n", fitData)
-    #print(fitData.head(5),data["Counts"].head(5))
     
     #fit the svr model
     model.fit(fitData, data["Counts"])
     
     pandas.set_option('display.max_columns', 500)
-    #print(DataFrame(search.cv_results_))
     
     #do all the same stuff to the 2017 data as the 2016 data as test data
     print("formatting test data")
@@ -94,11 +78,6 @@ def main():
     testdata=testdata.append(read_data(test2))
     testdata=testdata.append(read_data(test3))
     testdata=testdata.append(read_data(test4))
-    testdata=testdata.reset_index(drop=True)
-    
-    #REMOVE LATER: TAKES RANDOM SAMPLE OF THE DATA
-    testdata=testdata.sample(frac=0.25)
-    testdata=testdata.sort_index()
     testdata=testdata.reset_index(drop=True)
     
     testdata = map_data(testdata)
@@ -211,12 +190,8 @@ def make_graph(actual, predict, fit):
     fitGraph=fit.loc[fit['Start station number']==31634]
     plt.scatter(usegraph['Date'], usegraph['Counts'], c='b', label="actual")
     plt.scatter(usegraph['Date'], usegraph['SVR'], c='g', label="Support Vector Regression")
-    #if len(usegraph['Date'])>len(fitGraph['Counts']):
-     #   plt.scatter(usegraph['Date'][0:len(fitGraph['Counts'])], fitGraph['Counts'], c='r', label="Fit Data")
-    #else:
-     #   plt.scatter(usegraph['Date'], fitGraph['Counts'][0:len(usegraph['Date'])], c='r', label="Fit Data")
     plt.legend()
-    plt.savefig('svr_graph_withDates.png')
+    plt.savefig('svr_graph_withDates_all.png')
     
 
 if __name__ == "__main__":
